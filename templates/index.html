@@ -1,4 +1,4 @@
-<header>
+<head>
   <style>
     #neighbourhoodChart g.row text {
       fill: black;
@@ -7,19 +7,32 @@
     #typeChart g.row text {
       fill: black;
     }
+
+    #monthChart .x.axis text {
+      text-anchor: end !important;
+      transform: rotate(-15deg);
+    }
   </style>
+  <link rel="shortcut icon" href="{{url_for('static', filename='assets/icon.ico')}}">
+</head>
+<header>
+    <nav>
+        <div class="nav-wrapper indigo darken-4">
+          <a href="#" class="brand-logo">Vancouver Crime Dashboard</a>
+    
+          <ul id="nav-mobile" class="right hide-on-med-and-down">
+            <li>
+              <a href="https://www.linkedin.com/in/boris-tsao-8499b91b/">
+                LinkedIn</a
+              >
+            </li>
+            <li><a href="https://github.com/btsao604">GitHub</a></li>
+          </ul>
+        </div>
+      </nav>
 </header>
 <body>
-  <nav>
-    <div class="nav-wrapper indigo darken-4">
-      <a href="#" class="brand-logo">Vancouver Crime Dashboard</a>
-      <!-- <ul id="nav-mobile" class="right hide-on-med-and-down">
-              <li><a href="sass.html">Sass</a></li>
-              <li><a href="badges.html">Components</a></li>
-              <li><a href="collapsible.html">JavaScript</a></li>
-            </ul> -->
-    </div>
-  </nav>
+  
 
   <div class="container">
     <!-- <select class="browser-default" id="yearSelect">
@@ -85,14 +98,17 @@
         </p>
         <div id="typeChart"><span class="filter"></span></div>
       </div>
-
+      <div class="col s12">
+        <p>
+          This is a visualization for the city of Vancouver's crime activity
+          which can be found
+          <a href="https://data.vancouver.ca/datacatalogue/crime-data.htm"
+            >here</a
+          >. Please see the website for disclaimers and how to use the data.</p>
+          <p>Note that data points where there were no coordinates provided or were offset due to privacy were removed. This includes homicide and offence against a person crimes.</p>
+        </p>
+      </div>
       <!-- Forms 
-        - Range for Hour - DONE
-        - Range for Year - DONE
-        - Crime Type Bar - DONE
-        - Heatmap of Crime - DONE
-        - Neighborhood Crime - DONE
-        - Total Crime Number - DONE
         - Disclaimer 
       -->
     </div>
@@ -131,183 +147,8 @@
   //     console.log({{url_for('data',variable = ye)}});
   // });
 
-
-        function nFormatter(num, digits) {
-          var si = [
-            { value: 1, symbol: "" },
-            { value: 1e3, symbol: "k" },
-            { value: 1e6, symbol: "M" },
-            { value: 1e9, symbol: "G" },
-            { value: 1e12, symbol: "T" },
-            { value: 1e15, symbol: "P" },
-            { value: 1e18, symbol: "E" }
-          ];
-          var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-          var i;
-          for (i = si.length - 1; i > 0; i--) {
-            if (num >= si[i].value) {
-              break;
-            }
-          }
-          return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
-        }
-
-        const data = {{ data.chart_data | safe }}
-        data.forEach(d => {
-          d["timestamp"] = new Date(
-            d["YEAR"],
-            d["MONTH"] - 1,
-            d["DAY"],
-            d["HOUR"],
-            d["MINUTE"]
-          );
-        });
-
-        var ndx = crossfilter(data);
-        typeDim = ndx.dimension(d => {
-          return d.TYPE;
-        });
-        neighbourhoodDim = ndx.dimension(d => {
-          return d.NEIGHBOURHOOD;
-        });
-        monthDim = ndx.dimension(d => {
-          return d.MONTH;
-        });
-        // d3.timeMonth(d.timestamp)
-        hourDim = ndx.dimension(d => {
-          return d.HOUR;
-        });
-        monthDim = ndx.dimension(d => {
-          return d3.timeMonth(d.timestamp)
-        })
-        allDim = ndx.dimension(d => {
-          return d;
-        });
-        all = ndx.groupAll();
-
-        dc.dataCount(".dc-data-count")
-          .crossfilter(ndx)
-          .groupAll(all);
-
-        typeGroup = typeDim.group();
-        neighbourhoodGroup = neighbourhoodDim.group();
-        monthGroup = monthDim.group();
-        hourGroup = hourDim.group();
-
-        monthGroup = monthDim.group()
-
-        typeChart = dc.rowChart("#typeChart");
-        neighbourhoodChart = dc.rowChart("#neighbourhoodChart");
-        // monthChart = dc.barChart("#monthChart");
-        hourChart = dc.barChart("#hourChart");
-
-        monthChart = dc.barChart('#monthChart')
-
-
-        monthChart
-          .width(600)
-          .height(100)
-          .margins({ top: 10, right: 50, bottom: 30, left: 50 })
-          .dimension(monthDim)
-          .group(monthGroup)
-          .x(d3.scaleTime().domain([new Date(2018, 0, 1), new Date(2018, 12, 31)]))
-          // .round(d3.timeMonth.round)
-          .xUnits(d3.timeMonths)
-          .elasticY(true);
-
-        typeChart
-          .width(500)
-          .height(300)
-          .x(d3.scaleLinear().domain([6, 20]))
-          .elasticX(true)
-          .dimension(typeDim)
-          .group(typeGroup);
-
-        neighbourhoodChart
-          .width(500)
-          .height(300)
-          .x(d3.scaleLinear().domain([6, 20]))
-          .elasticX(true)
-          .dimension(neighbourhoodDim)
-          .group(neighbourhoodGroup);
-
-        // monthChart
-        //   .width(600)
-        //   .height(100)
-        //   .margins({ top: 10, right: 50, bottom: 30, left: 50 }).centerBar(true).elasticY(true)
-        //   .dimension(monthDim)
-        //   .group(monthGroup);
-        //   monthChart.x(d3.scaleLinear().domain([0, 13])).outerPadding(0.05);
-        var msPerHour = 1000 * 60 * 60;
-
-        var timeFormat = d3.timeFormat("%H:%M");
-
-        hourChart
-          .width(600)
-          .height(100)
-          .margins({ top: 10, right: 50, bottom: 30, left: 50 })
-          .elasticY(true)
-          .dimension(hourDim)
-          .group(hourGroup);
-        hourChart.x(d3.scaleLinear().domain([0, 24]));
-
-        hourChart.yAxis().ticks(5);
-
-        monthChart.yAxis().ticks(5);
-
-        var mymap = L.map("mapid");
-        function drawMap() {
-          mymap.setView([49.2537, -123.1207], 12);
-
-          L.tileLayer(
-            "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw",
-            {
-              maxZoom: 15,
-              attribution: "leaflet-Boris",
-              id: "mapbox.streets"
-            }
-          ).addTo(mymap);
-
-          //Heatmap
-          var geoData = [];
-          _.each(allDim.top(Infinity), function(d) {
-            geoData.push([d["LAT"], d["LON"], 1]);
-          });
-          var heat = L.heatLayer(geoData, {
-            radius: 7.5,
-            blur: 15,
-            maxZoom: 1
-          }).addTo(mymap);
-        }
-
-        drawMap();
-
-        dcCharts = [monthChart, typeChart, neighbourhoodChart, hourChart];
-
-        _.each(dcCharts, function(dcChart) {
-          dcChart.on("filtered", function(chart, filter) {
-            mymap.eachLayer(function(layer) {
-              mymap.removeLayer(layer);
-            });
-            drawMap();
-          });
-        });
-
-        dc.renderAll();
-
-        function AddYAxis(chartToUpdate, displayText) {
-          chartToUpdate
-            .svg()
-            .append("text")
-            .attr("class", "y-axis-label")
-            .attr("text-anchor", "middle")
-            .attr("transform", "rotate(-90)")
-            .attr("x", -chartToUpdate.width() / 2.5)
-            .attr("y", chartToUpdate.height() / 16)
-            .text(displayText);
-        }
-        AddYAxis(typeChart, "Type of Crime");
-        AddYAxis(neighbourhoodChart, "Neighbourhood");
+  var timeFormat = d3.timeFormat("%H:%M");
+  const data = {{ data.chart_data | safe }}
 </script>
-<script src="{{url_for('static', filename='js/maps.js')}}"></script>
 <script src="{{url_for('static', filename='js/charts.js')}}"></script>
+<!-- <script src="{{url_for('static', filename='js/maps.js')}}"></script> -->
