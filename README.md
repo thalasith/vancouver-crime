@@ -1,4 +1,6 @@
-#Vancouver Crime Dashboard
+# Vancouver Crime Dashboard
+
+## [Link to Live Site](https://intense-bastion-98788.herokuapp.com/)
 
 Disclaimer: Please read the VPD Disclaimer Notice on this dataset [here](https://data.vancouver.ca/datacatalogue/crime-data.htm)
 
@@ -6,11 +8,15 @@ This dashboard is meant to visualize Vancouver's crime data in 2018 with minimal
 
 This dashboard was built on a one Friday night and full day Saturday timeline.
 
-[Link to Live Site](https://intense-bastion-98788.herokuapp.com/)
+### Table of Contents
+
+**[Technology Stack](#technology-stack)**<br>
+**[Data Cleaning](#data-cleaning)**<br>
+**[Next Steps](#next-steps)**<br>
 
 ![](demo.gif)
 
-#Technology Stack
+# Technology Stack
 
 I've used the below to build this stack:
 
@@ -22,7 +28,8 @@ I've used the below to build this stack:
 6. Leaflet - CSS/JS library to create Vancouver's heatmap.
 7. jQuery & Lodash - JS libraries to handle certain HTML/JS manipulations.
 
-#Data Cleaning
+# Data Cleaning
+
 I've done minimal data cleaning to ensure that the data was as 'raw' as possible. Here is the list of datacleaning methods I complete:
 
 1. Changed the X,Y coordinates from UTM (Universal Transverse Mercator) to Latitude and Longitude to ensure that the data can be mapped to Leaflet.
@@ -30,7 +37,8 @@ I've done minimal data cleaning to ensure that the data was as 'raw' as possible
 3. Dropped datapoints where coordinates where not available. This is either a) crime was related to homicide or offense against a person or b) person reporting the crime was not aware of where it happeneg (most likely...).
 4. Split the data out to only show the 2018 dataset. This was due to user-friendliness. It would take a long time to load the entire dataset for the user.
 
-#Next Steps
+# Next Steps
+
 Next steps for when I pick this project up again:
 
 1. Include multiple years of data to be used - can use Flask's API and build a dropdown to select the year on the frontend.
