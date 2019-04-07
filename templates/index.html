@@ -1,0 +1,299 @@
+<header>
+  <style>
+    #neighbourhoodChart g.row text {
+      fill: black;
+    }
+
+    #typeChart g.row text {
+      fill: black;
+    }
+  </style>
+</header>
+<body>
+  <nav>
+    <div class="nav-wrapper indigo darken-4">
+      <a href="#" class="brand-logo">Vancouver Crime Dashboard</a>
+      <!-- <ul id="nav-mobile" class="right hide-on-med-and-down">
+              <li><a href="sass.html">Sass</a></li>
+              <li><a href="badges.html">Components</a></li>
+              <li><a href="collapsible.html">JavaScript</a></li>
+            </ul> -->
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- <select class="browser-default" id="yearSelect">
+      <option value="2018" selected>2018</option>
+      <option value="2017">2017</option>
+      <option value="2016">2016</option>
+      <option value="2015">2015</option>
+      <option value="2014">2014</option>
+      <option value="2013">2013</option>
+      <option value="2012">2012</option>
+      <option value="2011">2011</option>
+      <option value="2010">2010</option>
+      <option value="2009">2009</option>
+      <option value="2008">2008</option>
+      <option value="2007">2007</option>
+      <option value="2006">2006</option>
+      <option value="2005">2005</option>
+      <option value="2004">2004</option>
+      <option value="2003">2003</option>
+    </select> -->
+
+    <div class="row">
+      <div class="col s12">
+        <div class="dc-data-count">
+          <span class="filter-count"></span> selected out of
+          <span class="total-count"></span>
+          <a href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
+        </div>
+      </div>
+      <div class="col s7">
+        <p>
+          Crime by Month
+          <a href="javascript:monthChart.filterAll(); dc.renderAll();">Reset</a>
+        </p>
+        <div id="monthChart"></div>
+        <p>
+          Hourly Chart
+          <a href="javascript:hourChart.filterAll(); dc.renderAll();">Reset</a>
+        </p>
+        <div id="hourChart"></div>
+      </div>
+      <div class="col s5">
+        <div id="mapid" style="height: 300px; width:100%"></div>
+      </div>
+
+      <div class="col s6">
+        <p>
+          Neighborhood Crime
+          <a href="javascript:neighbourhoodChart.filterAll(); dc.renderAll();"
+            >Reset</a
+          >
+        </p>
+        <div id="neighbourhoodChart"></div>
+      </div>
+      <div class="col s6">
+        <p>
+          Type of Crime
+          <a href="javascript:typeChart.filterAll(); dc.renderAll();">Reset</a>
+        </p>
+        <div id="typeChart"></div>
+      </div>
+
+      <!-- Forms 
+        - Range for Hour - DONE
+        - Range for Year - DONE
+        - Crime Type Bar - DONE
+        - Heatmap of Crime - DONE
+        - Neighborhood Crime - DONE
+        - Total Crime Number - DONE
+        - Disclaimer 
+      -->
+    </div>
+  </div>
+</body>
+
+<link
+  rel="stylesheet"
+  href="{{url_for('static', filename='css/materialize.min.css')}}"
+/>
+<link
+  rel="stylesheet"
+  href="{{url_for('static', filename='css/leaflet.css')}}"
+/>
+<link
+  rel="stylesheet"
+  href="{{url_for('static', filename='css/dc.min.css')}}"
+/>
+
+<script src="{{url_for('static', filename='js/leaflet.js')}}"></script>
+<script src="{{url_for('static', filename='js/leaflet-heat.js')}}"></script>
+<script src="{{url_for('static', filename='js/jquery-3.3.1.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/materialize.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/lodash.js')}}"></script>
+<script src="{{url_for('static', filename='js/crossfilter.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/d3.v5.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/dc.min.js')}}"></script>
+<script>
+  //     $(document).ready(function(){
+  //       $('select').formSelect();
+  //     });
+  //     var year = 2018
+  //     $(document).on('change', '#yearSelect', function() {
+  //     var ye = $(this).val()
+  //     var path = `/api/${ye}`
+  //     console.log({{url_for('data',variable = ye)}});
+  // });
+
+
+        function nFormatter(num, digits) {
+          var si = [
+            { value: 1, symbol: "" },
+            { value: 1e3, symbol: "k" },
+            { value: 1e6, symbol: "M" },
+            { value: 1e9, symbol: "G" },
+            { value: 1e12, symbol: "T" },
+            { value: 1e15, symbol: "P" },
+            { value: 1e18, symbol: "E" }
+          ];
+          var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+          var i;
+          for (i = si.length - 1; i > 0; i--) {
+            if (num >= si[i].value) {
+              break;
+            }
+          }
+          return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
+        }
+
+        const data = {{ data.chart_data | safe }}
+        // data.forEach(d => {
+        //   d["timestamp"] = new Date(
+        //     d["YEAR"],
+        //     d["MONTH"] - 1,
+        //     d["DAY"],
+        //     d["HOUR"],
+        //     d["MINUTE"]
+        //   );
+        // });
+
+        var ndx = crossfilter(data);
+        typeDim = ndx.dimension(d => {
+          return d.TYPE;
+        });
+        neighbourhoodDim = ndx.dimension(d => {
+          return d.NEIGHBOURHOOD;
+        });
+        monthDim = ndx.dimension(d => {
+          return d.MONTH;
+        });
+        // d3.timeMonth(d.timestamp)
+        hourDim = ndx.dimension(d => {
+          return d.HOUR;
+        });
+        allDim = ndx.dimension(d => {
+          return d;
+        });
+        all = ndx.groupAll();
+
+        dc.dataCount(".dc-data-count")
+          .crossfilter(ndx)
+          .groupAll(all);
+
+        typeGroup = typeDim.group();
+        neighbourhoodGroup = neighbourhoodDim.group();
+        monthGroup = monthDim.group();
+        hourGroup = hourDim.group();
+        typeChart = dc.rowChart("#typeChart");
+        neighbourhoodChart = dc.rowChart("#neighbourhoodChart");
+        monthChart = dc.barChart("#monthChart");
+        hourChart = dc.barChart("#hourChart");
+
+        typeChart
+          .width(500)
+          .height(300)
+          .x(d3.scaleLinear().domain([6, 20]))
+          .elasticX(true)
+          .dimension(typeDim)
+          .group(typeGroup);
+
+        neighbourhoodChart
+          .width(500)
+          .height(300)
+          .x(d3.scaleLinear().domain([6, 20]))
+          .elasticX(true)
+          .dimension(neighbourhoodDim)
+          .group(neighbourhoodGroup);
+
+        // monthChart
+        //   .width(600)
+        //   .height(100)
+        //   .margins({ top: 10, right: 50, bottom: 30, left: 50 })
+        //   .dimension(monthDim)
+        //   .group(monthGroup)
+        //   .x(d3.scaleTime().domain([new Date(2018, 0, 1), new Date(2018, 12, 31)]))
+        //   .round(d3.timeMonth.round)
+        //   .xUnits(d3.timeMonths)
+        //   .elasticY(true);
+        monthChart
+          .width(600)
+          .height(100)
+          .margins({ top: 10, right: 50, bottom: 30, left: 50 }).elasticY(true)
+          .dimension(monthDim)
+          .group(monthGroup);
+          monthChart.x(d3.scaleLinear().domain([1, 13])).outerPadding(0.05);
+        var msPerHour = 1000 * 60 * 60;
+
+        var timeFormat = d3.timeFormat("%H:%M");
+
+        hourChart
+          .width(600)
+          .height(100)
+          .margins({ top: 10, right: 50, bottom: 30, left: 50 })
+          .elasticY(true)
+          .dimension(hourDim)
+          .group(hourGroup);
+        hourChart.x(d3.scaleLinear().domain([0, 24]));
+
+        hourChart.yAxis().ticks(5);
+
+        monthChart.yAxis().ticks(5);
+
+        var mymap = L.map("mapid");
+        function drawMap() {
+          mymap.setView([49.2537, -123.1207], 12);
+
+          L.tileLayer(
+            "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw",
+            {
+              maxZoom: 15,
+              attribution: "leaflet-Boris",
+              id: "mapbox.streets"
+            }
+          ).addTo(mymap);
+
+          //Heatmap
+          var geoData = [];
+          _.each(allDim.top(Infinity), function(d) {
+            geoData.push([d["LAT"], d["LON"], 1]);
+          });
+          var heat = L.heatLayer(geoData, {
+            radius: 7.5,
+            blur: 15,
+            maxZoom: 1
+          }).addTo(mymap);
+        }
+
+        drawMap();
+
+        dcCharts = [monthChart, typeChart, neighbourhoodChart, hourChart];
+
+        _.each(dcCharts, function(dcChart) {
+          dcChart.on("filtered", function(chart, filter) {
+            mymap.eachLayer(function(layer) {
+              mymap.removeLayer(layer);
+            });
+            drawMap();
+          });
+        });
+
+        dc.renderAll();
+
+        function AddYAxis(chartToUpdate, displayText) {
+          chartToUpdate
+            .svg()
+            .append("text")
+            .attr("class", "y-axis-label")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -chartToUpdate.width() / 2.5)
+            .attr("y", chartToUpdate.height() / 16)
+            .text(displayText);
+        }
+        AddYAxis(typeChart, "Type of Crime");
+        AddYAxis(neighbourhoodChart, "Neighbourhood");
+</script>
+<script src="{{url_for('static', filename='js/maps.js')}}"></script>
+<script src="{{url_for('static', filename='js/charts.js')}}"></script>

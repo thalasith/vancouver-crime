@@ -1,9 +1,0 @@
-{ 
-  "locationName": "Luzern",
-  "countryName": "Switzerland",
-  "annotation": "Canton",
-  "neighborhoodNoun": ["municipality", "municipalities"],
-
-  "dataUrl": "https://rawi.lu.ch/themen/geoportal/geodaten",
-  "dataTitle": "Geodaten – Kanton Luzern"
-}

@@ -1,8 +1,0 @@
-{ 
-  "locationName": "Germany",
-  "annotation": "Capitals",
-  "countryName": "Germany",
-  "neighborhoodNoun": ["capital", "capitals"],
-
-  "pointsInsteadOfPolygons": true
-}
