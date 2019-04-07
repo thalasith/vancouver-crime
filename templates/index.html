@@ -205,13 +205,13 @@
 
 
         monthChart
-          .width(600)
+          .width(500)
           .height(100)
           .margins({ top: 10, right: 50, bottom: 30, left: 50 })
           .dimension(monthDim)
           .group(monthGroup)
           .x(d3.scaleTime().domain([new Date(2018, 0, 1), new Date(2018, 12, 31)]))
-          .round(d3.timeMonth.round)
+          // .round(d3.timeMonth.round)
           .xUnits(d3.timeMonths)
           .elasticY(true);
 
