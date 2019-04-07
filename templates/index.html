@@ -49,19 +49,23 @@
           <a href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
         </div>
       </div>
-      <div class="col s7">
+      <div class="col s6">
         <p>
           Crime by Month
           <a href="javascript:monthChart.filterAll(); dc.renderAll();">Reset</a>
         </p>
-        <div id="monthChart"></div>
+        <div id="monthChart"><span class="filter"></span></div>
+        <!-- <div id="monthChart"><span class="filter"></span></div> -->
+        <br />
         <p>
           Hourly Chart
           <a href="javascript:hourChart.filterAll(); dc.renderAll();">Reset</a>
         </p>
-        <div id="hourChart"></div>
+        <div id="hourChart"><span class="filter"></span></div>
       </div>
+
       <div class="col s5">
+        <p>Crime Heatmap</p>
         <div id="mapid" style="height: 300px; width:100%"></div>
       </div>
 
@@ -72,14 +76,14 @@
             >Reset</a
           >
         </p>
-        <div id="neighbourhoodChart"></div>
+        <div id="neighbourhoodChart"><span class="filter"></span></div>
       </div>
       <div class="col s6">
         <p>
           Type of Crime
           <a href="javascript:typeChart.filterAll(); dc.renderAll();">Reset</a>
         </p>
-        <div id="typeChart"></div>
+        <div id="typeChart"><span class="filter"></span></div>
       </div>
 
       <!-- Forms 
@@ -149,15 +153,15 @@
         }
 
         const data = {{ data.chart_data | safe }}
-        // data.forEach(d => {
-        //   d["timestamp"] = new Date(
-        //     d["YEAR"],
-        //     d["MONTH"] - 1,
-        //     d["DAY"],
-        //     d["HOUR"],
-        //     d["MINUTE"]
-        //   );
-        // });
+        data.forEach(d => {
+          d["timestamp"] = new Date(
+            d["YEAR"],
+            d["MONTH"] - 1,
+            d["DAY"],
+            d["HOUR"],
+            d["MINUTE"]
+          );
+        });
 
         var ndx = crossfilter(data);
         typeDim = ndx.dimension(d => {
@@ -173,6 +177,9 @@
         hourDim = ndx.dimension(d => {
           return d.HOUR;
         });
+        monthDim = ndx.dimension(d => {
+          return d3.timeMonth(d.timestamp)
+        })
         allDim = ndx.dimension(d => {
           return d;
         });
@@ -186,10 +193,27 @@
         neighbourhoodGroup = neighbourhoodDim.group();
         monthGroup = monthDim.group();
         hourGroup = hourDim.group();
+
+        monthGroup = monthDim.group()
+
         typeChart = dc.rowChart("#typeChart");
         neighbourhoodChart = dc.rowChart("#neighbourhoodChart");
-        monthChart = dc.barChart("#monthChart");
+        // monthChart = dc.barChart("#monthChart");
         hourChart = dc.barChart("#hourChart");
+
+        monthChart = dc.barChart('#monthChart')
+
+
+        monthChart
+          .width(600)
+          .height(100)
+          .margins({ top: 10, right: 50, bottom: 30, left: 50 })
+          .dimension(monthDim)
+          .group(monthGroup)
+          .x(d3.scaleTime().domain([new Date(2018, 0, 1), new Date(2018, 12, 31)]))
+          .round(d3.timeMonth.round)
+          .xUnits(d3.timeMonths)
+          .elasticY(true);
 
         typeChart
           .width(500)
@@ -210,20 +234,10 @@
         // monthChart
         //   .width(600)
         //   .height(100)
-        //   .margins({ top: 10, right: 50, bottom: 30, left: 50 })
+        //   .margins({ top: 10, right: 50, bottom: 30, left: 50 }).centerBar(true).elasticY(true)
         //   .dimension(monthDim)
-        //   .group(monthGroup)
-        //   .x(d3.scaleTime().domain([new Date(2018, 0, 1), new Date(2018, 12, 31)]))
-        //   .round(d3.timeMonth.round)
-        //   .xUnits(d3.timeMonths)
-        //   .elasticY(true);
-        monthChart
-          .width(600)
-          .height(100)
-          .margins({ top: 10, right: 50, bottom: 30, left: 50 }).elasticY(true)
-          .dimension(monthDim)
-          .group(monthGroup);
-          monthChart.x(d3.scaleLinear().domain([1, 13])).outerPadding(0.05);
+        //   .group(monthGroup);
+        //   monthChart.x(d3.scaleLinear().domain([0, 13])).outerPadding(0.05);
         var msPerHour = 1000 * 60 * 60;
 
         var timeFormat = d3.timeFormat("%H:%M");

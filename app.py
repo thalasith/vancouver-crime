@@ -19,6 +19,7 @@ def index():
 @app.route('/api/<variable>', methods=['GET'])
 def data(variable):
     link = './data/vancouverCrime' + variable + '.csv'
+    print(link)
     df = pd.read_csv(link)
     chart_data = df.to_dict(orient='records')
     chart_data = json.dumps(chart_data, indent=2)
